@@ -1,4 +1,4 @@
-module Matrix (Matrix,(><),fromList,toList,(@@),rows,cols,det)where
+module Matrix (Matrix,(><),fromList,toList,(@@),rows,cols,det,inv,(.*.))where
 
 import Data.List
 
@@ -35,7 +35,7 @@ split n xs = as:split n bs where
 rows mat = m mat
 cols mat = n mat
 trans mat = Matrix {m = n mat, n = m mat, elems = map (mat @@) indexs} where
-    indexs = [(j,i)| i<-[1..m mat], j<-[1..n mat]]
+    indexs = [(j,i)| i<-[1..n mat], j<-[1..m mat]]
 det mat = case n mat /= m mat of
     True -> undefined
     False -> case n mat of
@@ -49,5 +49,17 @@ detSub index mat = coef * det mat' where
     coef = (-1)^(fst index+snd index)*mat @@ index
     elems' = map (mat @@) subs
     mat' = mat{n = n mat-1, m = m mat-1, elems = elems'}
+    
+--逆行列
+inv mat = undefined
+m1 .*. m2
+    | n m1 == m m2 = Matrix{
+        m = m m1, n = n m2,
+        elems = map (multiply m1 m2) [(i,j) | i <- [1..m m1], j <- [1..n m2]]}
+    | otherwise = Matrix{n = 0, m = 0, elems = []}
+multiply m1 m2 index = foldr calc 0 $ zip m1Cols m2Cols where
+    calc (index1,index2) amount = amount + m1 @@ index1 * m2 @@ index2
+    m1Cols = [(fst index,j) | j <- [1..n m1]]
+    m2Cols = [(i,snd index) | i <- [1..m m2]]
 
 mat @@ (i,j) = elems mat !! ((i-1)*(n mat)+j-1)
