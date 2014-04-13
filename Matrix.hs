@@ -1,4 +1,4 @@
-module Matrix (Matrix,(><),fromList,toList,(@@),rows,cols,det,inv,(.*.))where
+module Matrix (Matrix,(><),fromList,toList,(@@),rows,cols,det,inv,(.*.),(.**.),(.+.),(.-.))where
 
 import Data.List
 
@@ -10,6 +10,8 @@ data Matrix = Matrix{
 instance Show Matrix where
     show matrix = show (m matrix)++"*"++show (n matrix)
         ++ "\n[" ++ splitShow (n matrix) (elems matrix) ++ "]"
+
+emptyMatrix = Matrix{n = 0, m = 0, elems = []}
 
 splitShow n [] = []
 splitShow n xs =  concat.map (flip (++) "\n".format.show) $ split n xs where
@@ -32,6 +34,7 @@ split _ [] = []
 split n xs = as:split n bs where
     (as,bs) = splitAt n xs
 
+size mat = (m mat, n mat)
 rows mat = m mat
 cols mat = n mat
 trans mat = Matrix {m = n mat, n = m mat, elems = map (mat @@) indexs} where
@@ -52,14 +55,23 @@ detSub index mat = coef * det mat' where
     
 --逆行列
 inv mat = undefined
+
+--積, 和
+a .**. mat = mat{elems = map (*a) $ elems mat}
 m1 .*. m2
-    | n m1 == m m2 = Matrix{
+    | n m1 /= m m2 = emptyMatrix
+    | otherwise = Matrix{
         m = m m1, n = n m2,
         elems = map (multiply m1 m2) [(i,j) | i <- [1..m m1], j <- [1..n m2]]}
-    | otherwise = Matrix{n = 0, m = 0, elems = []}
 multiply m1 m2 index = foldr calc 0 $ zip m1Cols m2Cols where
     calc (index1,index2) amount = amount + m1 @@ index1 * m2 @@ index2
     m1Cols = [(fst index,j) | j <- [1..n m1]]
     m2Cols = [(i,snd index) | i <- [1..m m2]]
+m1 .+. m2
+    | size m1 == size m2 = m1{elems = map (\(a,b) -> a+b) $ zip (elems m1) (elems m2)}
+    | otherwise = emptyMatrix
+m1 .-. m2
+    | size m1 == size m2 = m1{elems = map (\(a,b) -> a-b) $ zip (elems m1) (elems m2)}
+    | otherwise = emptyMatrix
 
 mat @@ (i,j) = elems mat !! ((i-1)*(n mat)+j-1)
